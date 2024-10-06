@@ -2,7 +2,7 @@
 name: Test Datadog Metric
 
 on:
-  workflow_dispatch:
+  push:
 
 jobs:
   test-datadog:
