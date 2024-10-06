@@ -24,6 +24,7 @@ def send_metric(api_key, metric_name, value, tags=None):
             }
         ]
     }
+
     logging.info(f"Sending metric: {metric_name} with value: {value} and tags: {tags}")
     response = requests.post(url, headers=headers, json=payload)
     try:
