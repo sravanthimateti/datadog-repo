@@ -22,12 +22,11 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install requests
+        pip install requests pytest
 
     - name: Run tests
       id: test
       run: |
-        # Replace with your actual test command
         pytest
 
     - name: Send Datadog Metrics on Success
@@ -40,7 +39,6 @@ jobs:
         GITHUB_RUN_URL: ${{ github.run_url }}
       run: |
         python .github/scripts/send_datadog_metrics.py
-        
 
     - name: Send Datadog Metrics on Failure
       if: failure()
