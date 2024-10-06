@@ -1,9 +1,9 @@
 import os
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 
 def send_metric(api_key, metric_name, value, tags=None):
-    url = "https://api.datadoghq.com/api/v1/series"
+    url = "https://api.datadoghq.com/api/v1/series"  # Update if using EU
     headers = {
         "Content-Type": "application/json",
         "DD-API-KEY": api_key
@@ -13,7 +13,7 @@ def send_metric(api_key, metric_name, value, tags=None):
             {
                 "metric": metric_name,
                 "points": [
-                    [int(datetime.utcnow().timestamp()), value]
+                    [int(datetime.now(timezone.utc).timestamp()), value]
                 ],
                 "type": "count",
                 "tags": tags or []
@@ -21,22 +21,24 @@ def send_metric(api_key, metric_name, value, tags=None):
         ]
     }
     response = requests.post(url, headers=headers, json=payload)
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+        print("Metric sent successfully.")
+    except requests.exceptions.HTTPError as e:
+        print(f"Error sending metric: {e}")
+        print(f"Response Content: {response.text}")
+        raise
 
 def main():
     api_key = os.getenv('DATADOG_API_KEY')
-    workflow_name = os.getenv('GITHUB_WORKFLOW')
-    workflow_status = os.getenv('WORKFLOW_STATUS')
-    run_id = os.getenv('GITHUB_RUN_ID')
-    
-    metric_name = "github_actions.workflow_status"
-    value = 1 if workflow_status == "failure" else 0
-    tags = [
-        f"workflow:{workflow_name}",
-        f"status:{workflow_status}",
-        f"run_id:{run_id}"
-    ]
-    
+    if not api_key:
+        print("DATADOG_API_KEY is not set.")
+        exit(1)
+
+    metric_name = "test.metric"
+    value = 1
+    tags = ["test:integration"]
+
     send_metric(api_key, metric_name, value, tags)
     print(f"Sent metric {metric_name} with value {value} and tags {tags}")
 
