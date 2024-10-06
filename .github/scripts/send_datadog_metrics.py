@@ -20,6 +20,7 @@ def send_metric(api_key, metric_name, value, tags=None):
             }
         ]
     }
+    
     response = requests.post(url, headers=headers, json=payload)
     response.raise_for_status()
 
