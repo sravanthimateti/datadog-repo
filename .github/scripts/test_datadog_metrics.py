@@ -2,6 +2,7 @@ import os
 import requests
 from datetime import datetime, timezone
 
+
 def send_metric(api_key, metric_name, value, tags=None):
     url = "https://api.datadoghq.com/api/v1/series"  # Update if using EU
     headers = {
