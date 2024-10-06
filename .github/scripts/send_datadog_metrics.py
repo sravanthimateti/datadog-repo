@@ -35,6 +35,7 @@ def send_metric(api_key, metric_name, value, tags=None):
         logging.error(f"Response Content: {response.text}")
         raise
 
+
 def main():
     api_key = os.getenv('DATADOG_API_KEY')
     if not api_key:
