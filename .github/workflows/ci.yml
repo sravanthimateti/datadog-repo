@@ -6,6 +6,7 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -22,12 +23,31 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install requests pytest
+        pip install -r requirements.txt
+
+    - name: Capture Logs
+      id: capture_logs
+      run: |
+        echo "Capturing workflow logs..."
+        # Capture the entire workflow run logs
+        # GitHub Actions does not provide a direct API to fetch logs, so you need to capture logs during the run
+        # One approach is to redirect all step outputs to a file
+        # Here, we'll set up a trap to capture logs
+        exec > >(tee -a workflow.log) 2>&1
 
     - name: Run tests
       id: test
       run: |
         pytest
+
+    - name: Collect Workflow Logs
+      if: always()
+      run: |
+        echo "Collecting workflow logs..."
+        cat workflow.log
+        # Pass logs as environment variable
+        echo "::set-output name=workflow_logs::$(cat workflow.log | base64)"
+      id: collect_logs
 
     - name: Send Datadog Metrics on Success
       if: success()
@@ -37,6 +57,8 @@ jobs:
         WORKFLOW_STATUS: success
         GITHUB_RUN_ID: ${{ github.run_id }}
         GITHUB_RUN_URL: ${{ github.run_url }}
+        DATADOG_REGION: us # Change to 'eu' if applicable
+        GITHUB_ACTIONS_LOGS: ${{ steps.collect_logs.outputs.workflow_logs }}
       run: |
         python .github/scripts/send_datadog_metrics.py
 
@@ -48,5 +70,20 @@ jobs:
         WORKFLOW_STATUS: failure
         GITHUB_RUN_ID: ${{ github.run_id }}
         GITHUB_RUN_URL: ${{ github.run_url }}
+        DATADOG_REGION: us # Change to 'eu' if applicable
+        GITHUB_ACTIONS_LOGS: ${{ steps.collect_logs.outputs.workflow_logs }}
       run: |
         python .github/scripts/send_datadog_metrics.py
+
+    - name: Send Workflow Logs to Datadog
+      if: always()
+      env:
+        DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+        DATADOG_REGION: us # Change to 'eu' if applicable
+        GITHUB_WORKFLOW: ${{ github.workflow }}
+        WORKFLOW_STATUS: ${{ job.status }}
+        GITHUB_RUN_ID: ${{ github.run_id }}
+        GITHUB_RUN_URL: ${{ github.run_url }}
+        GITHUB_ACTIONS_LOGS: ${{ steps.collect_logs.outputs.workflow_logs }}
+      run: |
+        python .github/scripts/send_datadog_logs.py
