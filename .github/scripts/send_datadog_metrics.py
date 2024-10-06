@@ -50,9 +50,12 @@ def main():
     tags = [
         f"workflow:{workflow_name}",
         f"status:{workflow_status}",
-        f"run_id:{run_id}",
-        f"run_url:{run_url}"
+        f"run_id:{run_id}"
     ]
+
+    # Only include run_url if it's not empty
+    if run_url:
+        tags.append(f"run_url:{run_url}")
 
     logging.info(f"Preparing to send metric: {metric_name}")
     send_metric(api_key, metric_name, value, tags)
