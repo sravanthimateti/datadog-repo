@@ -1,11 +1,14 @@
-# .github/workflows/test_datadog_metric.yml
-name: Test Datadog Metric
+# .github/workflows/ci.yml
+name: CI
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
-  test-datadog:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,10 +22,31 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install requests
+        pip install requests pytest
 
-    - name: Run Test Metric Script
+    - name: Run tests
+      id: test
+      run: |
+        pytest
+
+    - name: Send Datadog Metrics on Success
+      if: success()
       env:
         DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+        GITHUB_WORKFLOW: ${{ github.workflow }}
+        WORKFLOW_STATUS: success
+        GITHUB_RUN_ID: ${{ github.run_id }}
+        GITHUB_RUN_URL: ${{ github.run_url }}
       run: |
-        python .github/scripts/test_datadog_metric.py
+        python .github/scripts/send_datadog_metrics.py
+
+    - name: Send Datadog Metrics on Failure
+      if: failure()
+      env:
+        DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
+        GITHUB_WORKFLOW: ${{ github.workflow }}
+        WORKFLOW_STATUS: failure
+        GITHUB_RUN_ID: ${{ github.run_id }}
+        GITHUB_RUN_URL: ${{ github.run_url }}
+      run: |
+        python .github/scripts/send_datadog_metrics.py
