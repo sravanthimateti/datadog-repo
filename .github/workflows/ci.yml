@@ -23,7 +23,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install -r requirements.txt
+        pip install requests pytest
 
     - name: Capture Logs
       id: capture_logs
