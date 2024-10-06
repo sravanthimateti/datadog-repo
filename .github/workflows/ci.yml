@@ -82,4 +82,4 @@ jobs:
         GITHUB_RUN_URL: ${{ github.run_url }}
         GITHUB_ACTIONS_LOGS: ${{ steps.collect_logs.outputs.workflow_logs }}
       run: |
-        python .github/scripts/send_datadog_scripts.py
+        python .github/scripts/send_datadog_metrics.py
